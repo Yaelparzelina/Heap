@@ -6,13 +6,18 @@
  * the possibility of not performing lazy decrease keys.
  *
  */
-import java.util.LinkedList;
 public class Heap
 {
     public final boolean lazyMelds;
     public final boolean lazyDecreaseKeys;
     public HeapNode min;
-    public LinkedList<HeapNode> rootList;
+    public HeapNode startRoot;
+    public int size;
+    public int numTrees;
+    public int numMarkedNodes;
+    public int totalLinks;
+    public int totalCuts;
+    public int totalHeapifyCosts;
     
     /**
      *
@@ -24,7 +29,12 @@ public class Heap
         this.lazyMelds = lazyMelds;
         this.lazyDecreaseKeys = lazyDecreaseKeys;
         this.min = null;
-        this.rootList = new LinkedList<>();
+        this.size = 0;
+        this.numTrees = 0;
+        this.numMarkedNodes = 0;
+        this.totalLinks = 0;
+        this.totalCuts = 0;
+        this.totalHeapifyCosts = 0;
     }
 
     /**
@@ -32,31 +42,80 @@ public class Heap
      * pre: key > 0
      *
      * Insert (key,info) into the heap and return the newly generated HeapNode.
-     *
+     * for lazy meld complexity O(1)
+     * for non-lazy meld complexity O(log n)
      */
     public HeapNode insert(int key, String info) 
     {    
         HeapNode newNode = new HeapNode(key, info);
-        this.rootList.add(newNode);
-        if (min == null || newNode.key < min.key)
+        //insert new node before the min node
+        this.size++;
+        this.numTrees++;
+        if (this.min == null)
         {
-            min = newNode;
+            this.min = newNode;
         }
-        if (!lazyMelds)
+        else //keep the root list circular
         {
-            meld(this);
+           HeapNode lastNode = this.min.prev;
+           newNode.next = this.min;
+           newNode.prev = lastNode;
+           lastNode.next = newNode;
+           this.min.prev = newNode;
+        }
+        if (key < this.min.key)
+        {
+            this.min = newNode;
+        }
+        if (!lazyMelds) 
+        {
+            this.successiveLink();
         }
         return newNode;
     }
 
-    /**
-     * 
-     * Return the minimal HeapNode, null if empty.
-     *
-     */
-    public HeapNode findMin()
+    private void successiveLink()
     {
-        return this.min;
+        HeapNode[] degreeArray = new HeapNode[(int)Math.ceil(Math.log(this.size)/Math.log(2))];
+        degreeArray[this.min.rank] = this.min;
+        HeapNode current = this.min.next;
+        while(current != this.min)
+        {
+            if (degreeArray[current.rank] == null)
+            {
+                degreeArray[current.rank] = current;
+            }
+            else
+            {
+                HeapNode linkTree = this.link(current, degreeArray[current.rank]);
+                degreeArray[linkTree.rank] = linkTree;
+                degreeArray[current.rank] = null;
+            }
+            current = current.next;
+        }
+    }
+    private HeapNode link(HeapNode x, HeapNode y)
+    {
+        HeapNode smaller;
+        HeapNode larger;
+        if (x.key < y.key)
+        {
+            smaller = x;
+            larger = y;
+        }
+        else
+        {
+            smaller = y;
+            larger = x;
+        }
+        larger.parent = smaller;
+        larger.next = smaller.child;
+        larger.prev = smaller.child.prev;
+        smaller.child.prev.next = larger;
+        smaller.child.prev = larger;
+        smaller.child = larger;
+        smaller.rank++;
+        return smaller;
     }
 
     /**
@@ -66,7 +125,7 @@ public class Heap
      */
     public void deleteMin()
     {
-        
+
         return; // should be replaced by student code
     }
 
@@ -192,8 +251,8 @@ public class Heap
             this.key = key;
             this.info = info;
             this.child = null;
-            this.next = null;
-            this.prev = null;
+            this.next = this;
+            this.prev = this;
             this.parent = null;
             this.rank = 0;
             this.marked = false;
