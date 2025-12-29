@@ -6,11 +6,13 @@
  * the possibility of not performing lazy decrease keys.
  *
  */
+import java.util.LinkedList;
 public class Heap
 {
     public final boolean lazyMelds;
     public final boolean lazyDecreaseKeys;
     public HeapNode min;
+    public LinkedList<HeapNode> rootList;
     
     /**
      *
@@ -21,7 +23,8 @@ public class Heap
     {
         this.lazyMelds = lazyMelds;
         this.lazyDecreaseKeys = lazyDecreaseKeys;
-        // student code can be added here
+        this.min = null;
+        this.rootList = new LinkedList<>();
     }
 
     /**
@@ -33,7 +36,17 @@ public class Heap
      */
     public HeapNode insert(int key, String info) 
     {    
-        return null; // should be replaced by student code
+        HeapNode newNode = new HeapNode(key, info);
+        this.rootList.add(newNode);
+        if (min == null || newNode.key < min.key)
+        {
+            min = newNode;
+        }
+        if (!lazyMelds)
+        {
+            meld(this);
+        }
+        return newNode;
     }
 
     /**
@@ -43,7 +56,7 @@ public class Heap
      */
     public HeapNode findMin()
     {
-        return null; // should be replaced by student code
+        return this.min;
     }
 
     /**
@@ -53,6 +66,7 @@ public class Heap
      */
     public void deleteMin()
     {
+        
         return; // should be replaced by student code
     }
 
@@ -161,7 +175,8 @@ public class Heap
      * Class implementing a node in a ExtendedFibonacci Heap.
      *  
      */
-    public static class HeapNode{
+    public static class HeapNode
+    {
         public int key;
         public String info;
         public HeapNode child;
@@ -169,5 +184,20 @@ public class Heap
         public HeapNode prev;
         public HeapNode parent;
         public int rank;
-    }
+        public boolean marked; //whether the node's child has been cut 
+        public boolean deleted; //whether the node's been deleted
+        
+        public HeapNode(int key, String info)
+        {
+            this.key = key;
+            this.info = info;
+            this.child = null;
+            this.next = null;
+            this.prev = null;
+            this.parent = null;
+            this.rank = 0;
+            this.marked = false;
+            this.deleted = false;
+        }
+    }   
 }
