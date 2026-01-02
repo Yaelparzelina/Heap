@@ -22,6 +22,7 @@ public class Heap
     /**
      *
      * Constructor to initialize an empty heap.
+     * complexity O(1)
      *
      */
     public Heap(boolean lazyMelds, boolean lazyDecreaseKeys)
@@ -43,7 +44,8 @@ public class Heap
      *
      * Insert (key,info) into the heap and return the newly generated HeapNode.
      * for lazy meld complexity O(1)
-     * for non-lazy meld complexity O(log n)
+     * for non-lazy meld and lazy decrease keys complexity O(n)
+     * for non-lazy meld and non-lazy decrease keys complexity O(log n)
      */
     public HeapNode insert(int key, String info) 
     { 
@@ -56,7 +58,29 @@ public class Heap
         meld(newHeap);
         return newNode;
     }
-   
+    /**
+     * 
+     * pre: newNode is not null and not a root node. and the heap is not empty.
+     *  concatenate the node to the root list.
+     * complexity O(1)
+     *
+     */
+   public void concatenateToRootList(HeapNode newNode)
+   {
+        HeapNode originalEnd = this.min.prev;
+        newNode.prev.next = this.min.next;
+        this.min.next.prev = newNode.prev;
+        originalEnd.next = newNode;
+        newNode.prev = originalEnd;
+   }
+    /**
+     * 
+     * 
+     * link trees with the same rank to reconstruct the heap.
+     * for lazy decrease keys complexity O(n)
+     * for non-lazy decrease keys complexity O(log n)
+     * 
+     */
     private void successiveLink()
     {
         //create an array to store the trees by rank
@@ -118,7 +142,7 @@ public class Heap
      * 
      * Link two trees of the same rank x and y.
      * where the root will be the smaller of the two nodes.
-     *
+     * complexity O(1)
      */
     private HeapNode link(HeapNode x, HeapNode y)
     {
@@ -164,6 +188,8 @@ public class Heap
     /**
      * 
      * Delete the minimal item.
+     * for lazy decrease keys complexity O(n)
+     * for non-lazy decrease keys complexity O(log n)
      *
      */
     public void deleteMin()
@@ -195,12 +221,7 @@ public class Heap
                 current.parent = null;
                 current = current.next;
            } while (current != child);
-           //concatenate the children to the root list
-           HeapNode originalEnd = this.min.prev;
-           child.prev.next = this.min.next;
-           this.min.next.prev = child.prev;
-           originalEnd.next = child;
-           child.prev = originalEnd;
+           concatenateToRootList(child);
         }
 
         //handle the case where the min node has no children but is not the only node in the heap
@@ -214,7 +235,45 @@ public class Heap
         }
         successiveLink(); //successive link is updated the min node and the number of trees
     }
-
+    
+    /**
+     * 
+     * cascading cuts to fix the heap by cutting the node and its parent if the node is marked.
+     * complexity O(log n)
+     *
+     */
+    public void cascadingCuts(HeapNode node)
+    {
+        if (node.parent == null) return;
+        //handle the case where the node has a parent and the parent has a rank greater than 1
+        HeapNode parent = node.parent;
+        if (node.parent.rank>1)
+        {
+            HeapNode preNode = node.prev;
+            HeapNode postNode = node.next;
+            preNode.next = postNode;
+            postNode.prev = preNode;
+            if (parent.child == node)
+            {
+                parent.child = postNode;
+            }
+        } 
+        //handle the case where the node has a parent and the parent has a rank equal to 1
+        else
+        {
+            parent.child = null;
+        }
+        parent.rank--;
+        node.marked = false;
+        node.prev = node;
+        node.next = node;
+        concatenateToRootList(node);
+        if (parent.marked)
+        {
+            cascadingCuts(parent);
+        }
+        else parent.marked = true;
+    }
     /**
      * 
      * pre: 0<=diff<=x.key
@@ -264,11 +323,7 @@ public class Heap
             return;
         }
         //concatenate the root lists
-        HeapNode originalEnd = this.min.prev;
-        heap2.min.prev.next = this.min;
-        this.min.prev = heap2.min.prev;
-        originalEnd.next = heap2.min;
-        heap2.min.prev = originalEnd;
+        concatenateToRootList(heap2.min);
         //update the min node
         if (this.min == null || heap2.min.key < this.min.key)
         {
@@ -285,66 +340,71 @@ public class Heap
     /**
      * 
      * Return the number of elements in the heap
+     * complexity O(1)
      *   
      */
     public int size()
     {
-        return 46; // should be replaced by student code
+        return this.size;
     }
 
 
     /**
      * 
      * Return the number of trees in the heap.
-     * 
+     * complexity O(1)
+     *
      */
     public int numTrees()
     {
-        return 46; // should be replaced by student code
+        return this.numTrees;
     }
     
     
     /**
      * 
      * Return the number of marked nodes in the heap.
-     * 
+     * complexity O(1)
+     *
      */
     public int numMarkedNodes()
     {
-        return 46; // should be replaced by student code
+        return this.numMarkedNodes;
     }
     
     
     /**
      * 
      * Return the total number of links.
-     * 
+     * complexity O(1)
      */
     public int totalLinks()
     {
-        return 46; // should be replaced by student code
+        return this.totalLinks;
     }
     
     
     /**
      * 
      * Return the total number of cuts.
-     * 
+     * complexity O(1)
+     *
      */
     public int totalCuts()
     {
-        return 46; // should be replaced by student code
+        return this.totalCuts;
     }
     
 
     /**
      * 
      * Return the total heapify costs.
-     * 
+     * complexity O(1)
+     *
      */
     public int totalHeapifyCosts()
     {
-        return 46; // should be replaced by student code
+        return this.totalHeapifyCosts;
     }
     
     
