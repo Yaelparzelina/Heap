@@ -46,31 +46,14 @@ public class Heap
      * for non-lazy meld complexity O(log n)
      */
     public HeapNode insert(int key, String info) 
-    {    
+    { 
+        // create a new heap with the same lazy melds and lazy decrease keys and insert the new node into it   
         HeapNode newNode = new HeapNode(key, info);
-        //insert new node before the min node
-        this.size++;
-        this.numTrees++;
-        if (this.min == null)
-        {
-            this.min = newNode;
-        }
-        else //keep the root list circular
-        {
-           HeapNode lastNode = this.min.prev;
-           newNode.next = this.min;
-           newNode.prev = lastNode;
-           lastNode.next = newNode;
-           this.min.prev = newNode;
-        }
-        if (key < this.min.key)
-        {
-            this.min = newNode;
-        }
-        if (!lazyMelds) 
-        {
-            this.successiveLink();
-        }
+        Heap newHeap = new Heap(this.lazyMelds, this.lazyDecreaseKeys);
+        newHeap.min = newNode;
+        newHeap.size = 1;
+        newHeap.numTrees = 1;
+        meld(newHeap);
         return newNode;
     }
 
@@ -94,6 +77,12 @@ public class Heap
             current = current.next;
         }
     }
+    /**
+     * 
+     * Link two trees of the same rank x and y.
+     * where the root will be the smaller of the two nodes.
+     *
+     */
     private HeapNode link(HeapNode x, HeapNode y)
     {
         HeapNode smaller;
@@ -158,9 +147,41 @@ public class Heap
      * pre: heap2.lazyMelds = this.lazyMelds AND heap2.lazyDecreaseKeys = this.lazyDecreaseKeys
      *
      */
-    public void meld(Heap heap2)
+    public void meld(Heap heap2)   
     {
-        return; // should be replaced by student code           
+        //update the total stats
+        this.totalCuts += heap2.totalCuts;
+        this.totalLinks += heap2.totalLinks;
+        this.totalHeapifyCosts += heap2.totalHeapifyCosts;
+        this.numMarkedNodes += heap2.numMarkedNodes;
+        this.numTrees += heap2.numTrees;
+        this.size += heap2.size;
+        //handle the case where one of the heaps is empty
+        if (heap2.min == null)
+        {
+            return;
+        }
+        if (this.min == null)
+        {
+            this.min = heap2.min;
+            return;
+        }
+        //concatenate the root lists
+        HeapNode originalEnd = this.min.prev;
+        heap2.min.prev.next = this.min;
+        this.min.prev = heap2.min.prev;
+        originalEnd.next = heap2.min;
+        heap2.min.prev = originalEnd;
+        //update the min node
+        if (this.min == null || heap2.min.key < this.min.key)
+        {
+            this.min = heap2.min;
+        }
+        //if lazy melds is not enabled, perform successive link
+        if (!this.lazyMelds)
+        {
+            successiveLink();
+        }  
     }
     
     
