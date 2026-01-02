@@ -287,10 +287,84 @@ public class Heap
             parent.marked = true;
             this.numMarkedNodes++;
         }
+    }
+    
+    public void heapifyUp(HeapNode node)
+    {
+        while (node.parent != null && node.key < node.parent.key)
+        {
+            this.totalHeapifyCosts++;
 
-        
+            HeapNode parent = node.parent;
+            HeapNode preNode = node.prev;
+            HeapNode postNode = node.next;
+            HeapNode preParent = parent.prev;
+            HeapNode postParent = parent.next;
+            HeapNode nodeChild = node.child;
+            HeapNode parentChild = parent.child;
+
+            
+            //update the ranks and the marked status
+            int tempRank = node.rank;
+            node.rank = parent.rank;
+            parent.rank = tempRank;
+            boolean tempMarked = parent.marked;
+            parent.marked = node.marked;
+            node.marked = tempMarked;
+            
+            //handle parent and grandparent relations
+            if (parent.parent != null && parent.parent.child == parent)
+            {
+                parent.parent.child = node;
+                
+            }
+            else if (parent.parent == null && this.min == parent)
+            {
+                this.min = node;
+            }
+
+       
+
+            //add node to parent's siblings
+            preParent.next = node;
+            postParent.prev = node;
+            node.next = postParent;
+            node.prev = preParent;
+            node.parent = parent.parent;
+
+            //add parent to node's siblings
+            preNode.next = parent;
+            parent.prev = preNode;
+            parent.next = postNode;
+            postNode.prev = parent;
+            parent.parent = node;
+            
+            //set the node as the parent of his siblings
+            HeapNode current = parent.child;
+            node.child = parentChild;
+            do { 
+                current.parent = node;
+                current = current.next;
+            } while (current != parentChild);
+
+          
+            //set the parents of the node's children to the parent
+            current = nodeChild;
+            if (nodeChild != null)
+            {
+                do { 
+                current.parent = parent;
+                current = current.next;
+                } while (current != nodeChild);
+                parent.child = nodeChild;
+            }
+            //for the next iteration
+            node = parent;
+        }
 
     }
+
+
     /**
      * 
      * pre: 0<=diff<=x.key
@@ -300,7 +374,7 @@ public class Heap
      */
     public void decreaseKey(HeapNode x, int diff) 
     {    
-        return; // should be replaced by student code
+        x.key -= diff;
     }
 
     /**
