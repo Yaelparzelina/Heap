@@ -60,13 +60,19 @@ public class Heap
     }
     /**
      * 
-     * pre: newNode is not null and not a root node. and the heap is not empty.
+     * pre: not in root list. 
      *  concatenate the node to the root list.
      * complexity O(1)
      *
      */
    public void concatenateToRootList(HeapNode newNode)
    {
+    if (newNode == null) return;
+    if (this.min == null)
+    {
+        this.min = newNode;
+        return;
+    }
     HeapNode first = this.min;
     HeapNode last = this.min.prev;
     HeapNode newStart = newNode;
@@ -233,30 +239,22 @@ public class Heap
         HeapNode preMin = this.min.prev;
         preMin.next = this.min.next;
         this.min.next.prev = preMin;
-        //sets a pointer to the min node (not necessary to right node)
-        if (this.min.next == this.min )
-        {
-            this.min = this.min.child;
-        }
-        else
-        {
-            this.min = this.min.next;
-        }
+        this.min = preMin; 
         successiveLink(); //successive link is updated the min node and the number of trees
     }
     
     /**
      * 
      * cascading cuts to fix the heap by cutting the node and its parent if the node is marked.
-     * complexity O(log n)
+     * complexity O(n)
      *
      */
     public void cascadingCuts(HeapNode node)
     {
         if (node.parent == null) return;
-        //handle the case where the node has a parent and the parent has a rank greater than 1
         this.totalCuts++;
         HeapNode parent = node.parent;
+       //handle the case where the node has a parent and the parent has a rank greater than 1
         if (node.parent.rank>1)
         {
             HeapNode preNode = node.prev;
@@ -273,22 +271,23 @@ public class Heap
         {
             parent.child = null;
         }
+
+        //update the rank of the parent and the node
         parent.rank--;
         node.marked = false;
         this.numMarkedNodes--;
+        node.parent = null;
+        this.numTrees++;
         node.prev = node;
         node.next = node;
-        this.numTrees++;
-        concatenateToRootList(node);
-        if (parent.marked)
-        {
-            cascadingCuts(parent);
+        concatenateToRootList(node); //concatenate the node to the root list
+        
+        if (parent.marked) cascadingCuts(parent);
+        else if (parent.parent != null) {
+            parent.marked = true;
+            this.numMarkedNodes++;
         }
-        else if (parent.parent != null)
-            {
-                parent.marked = true;
-                this.numMarkedNodes++;
-            }
+
         
 
     }
