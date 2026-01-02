@@ -67,11 +67,12 @@ public class Heap
      */
    public void concatenateToRootList(HeapNode newNode)
    {
-        HeapNode originalEnd = this.min.prev;
-        newNode.prev.next = this.min.next;
-        this.min.next.prev = newNode.prev;
-        originalEnd.next = newNode;
-        newNode.prev = originalEnd;
+        HeapNode first = this.min;
+        HeapNode last = this.min.prev;
+        last.next = newNode;
+        newNode.prev = last;
+        first.prev = newNode;
+        newNode.next = first;
    }
     /**
      * 
@@ -125,7 +126,7 @@ public class Heap
                 {
                     //add the node to the end of the circular linked list
                     last.next = node;
-                    node.prev = last;
+                     node.prev = last;
                     node.next = first;
                     first.prev = node;
                     last = node;
@@ -213,6 +214,7 @@ public class Heap
         //handle the case where the min node has children
         else if (this.min.child != null)
         {
+            this.numTrees+=this.min.rank-1; //update the number of trees
            HeapNode child = this.min.child;
            HeapNode current = child;
            //set the parents of the children to null
@@ -224,15 +226,11 @@ public class Heap
            concatenateToRootList(child);
         }
 
-        //handle the case where the min node has no children but is not the only node in the heap
-        else
-        {
-            //remove the min node from the root list
-            HeapNode preMin = this.min.prev;
-            preMin.next = this.min.next;
-            this.min.next.prev = preMin;
+        //remove the min node from the root list
+        HeapNode preMin = this.min.prev;
+        preMin.next = this.min.next;
+        this.min.next.prev = preMin;
            
-        }
         successiveLink(); //successive link is updated the min node and the number of trees
     }
     
@@ -267,12 +265,14 @@ public class Heap
         node.marked = false;
         node.prev = node;
         node.next = node;
+        numTrees++;
         concatenateToRootList(node);
         if (parent.marked)
         {
             cascadingCuts(parent);
         }
         else parent.marked = true;
+
     }
     /**
      * 
