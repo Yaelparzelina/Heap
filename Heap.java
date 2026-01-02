@@ -56,23 +56,36 @@ public class Heap
         meld(newHeap);
         return newNode;
     }
-
+   
     private void successiveLink()
     {
+        //create an array to store the trees by rank
         HeapNode[] degreeArray = new HeapNode[(int)Math.ceil(Math.log(this.size)/Math.log(2))];
         degreeArray[this.min.rank] = this.min;
         HeapNode current = this.min.next;
         while(current != this.min)
         {
+            //if the tree is not in the array, add it
             if (degreeArray[current.rank] == null)
             {
                 degreeArray[current.rank] = current;
             }
             else
             {
+                //if the tree is in the array, link it to the current tree 
                 HeapNode linkTree = this.link(current, degreeArray[current.rank]);
-                degreeArray[linkTree.rank] = linkTree;
                 degreeArray[current.rank] = null;
+                //if the tree is not in the array, add it
+                if (degreeArray[linkTree.rank] == null)
+                {
+                    degreeArray[linkTree.rank] = linkTree;
+                }
+                //if the array already has a tree with the same rank, run the loop again for the new tree
+                else
+                {
+                current = linkTree;
+                current = current.prev;
+                }
             }
             current = current.next;
         }
@@ -107,6 +120,12 @@ public class Heap
         return smaller;
     }
 
+     // return the min node
+     public HeapNode findMin()
+     {
+         return this.min;
+     }
+
     /**
      * 
      * Delete the minimal item.
@@ -114,8 +133,67 @@ public class Heap
      */
     public void deleteMin()
     {
+        //handle the case where the heap is empty
+        if (this.min == null)
+        {
+            return;
+        }
 
-        return; // should be replaced by student code
+        //update the size and number of trees
+        this.size--;
+        this.numTrees= this.numTrees -1 + this.min.rank;
+        
+        //handle the case where the heap has only one node
+        if (this.min.next == this.min && this.min.child == null)
+        {
+            this.min = null;
+            return;
+        }
+
+        //handle the case where the min node has children
+        else if (this.min.child != null)
+        {
+           //concatenate the children of the min node to the root list
+           HeapNode child = this.min.child;
+           HeapNode originalEnd = this.min.prev;
+           child.prev.next = this.min.next;
+           this.min.next.prev = child.prev;
+           originalEnd.next = child;
+           child.prev = originalEnd;
+           //find the new min node and set the parents of the root list to null
+           HeapNode current = child;
+           HeapNode newMin = current;
+           do 
+           {
+                current.parent = null;
+                if (current.key < newMin.key)
+                {
+                    newMin = current;
+                }
+                current = current.next;
+            } while (current != child);
+            this.min = newMin;
+        }
+
+        //handle the case where the min node has no children but is not the only node in the heap
+        else
+        {
+            //remove the min node from the root list
+            HeapNode preMin = this.min.prev;
+            preMin.next = this.min.next;
+            this.min.next.prev = preMin;
+            //update the min node
+            HeapNode current = preMin;
+            this.min = current;
+            do {
+                if (current.key < this.min.key)
+                {
+                    this.min = current;
+                }
+                current = current.next;
+            } while (current != preMin);
+        }
+        successiveLink();
     }
 
     /**
