@@ -60,34 +60,59 @@ public class Heap
     private void successiveLink()
     {
         //create an array to store the trees by rank
-        HeapNode[] degreeArray = new HeapNode[(int)Math.ceil(Math.log(this.size)/Math.log(2))];
-        degreeArray[this.min.rank] = this.min;
-        HeapNode current = this.min.next;
-        while(current != this.min)
+        HeapNode[] bucket = new HeapNode[(int)Math.ceil(Math.log(this.size)/Math.log(2))];
+        HeapNode x = this.min;
+        if (x == null) return;
+        //break the circular linked list into a linear linked list
+        x.prev.next=null;
+        //link the trees by rank
+        while (x != null)
         {
-            //if the tree is not in the array, add it
-            if (degreeArray[current.rank] == null)
+            HeapNode y = x;
+            x=x.next;
+            while (bucket[y.rank] != null)
             {
-                degreeArray[current.rank] = current;
+                HeapNode other = bucket[y.rank];
+                bucket[y.rank] = null;
+                y = link(y, other);
             }
-            else
+            bucket[y.rank] = y;
+        }
+        //reconstruct the circular linked list
+        this.min = null;
+        this.numTrees = 0;
+        HeapNode first = null;
+        HeapNode last = null;
+        for (int i = 0; i < bucket.length; i++)
+        {
+            
+            if (bucket[i] != null)
             {
-                //if the tree is in the array, link it to the current tree 
-                HeapNode linkTree = this.link(current, degreeArray[current.rank]);
-                degreeArray[current.rank] = null;
-                //if the tree is not in the array, add it
-                if (degreeArray[linkTree.rank] == null)
+                HeapNode node = bucket[i];
+                this.numTrees++;
+                if (first == null)
                 {
-                    degreeArray[linkTree.rank] = linkTree;
+                    first = node;
+                    last = node;
+                    node.next = node;
+                    node.prev = node;
+                    this.min = node;
                 }
-                //if the array already has a tree with the same rank, run the loop again for the new tree
                 else
                 {
-                current = linkTree;
-                current = current.prev;
+                    //add the node to the end of the circular linked list
+                    last.next = node;
+                    node.prev = last;
+                    node.next = first;
+                    first.prev = node;
+                    last = node;
+                    //update the min node
+                    if (node.key < this.min.key)
+                    {
+                        this.min = node;
+                    }
                 }
             }
-            current = current.next;
         }
     }
     /**
@@ -110,17 +135,31 @@ public class Heap
             smaller = y;
             larger = x;
         }
+        //link the larger node to the smaller node
         larger.parent = smaller;
         larger.next = smaller.child;
         larger.prev = smaller.child.prev;
-        smaller.child.prev.next = larger;
-        smaller.child.prev = larger;
-        smaller.child = larger;
+        if (smaller.child == null)
+        {
+            smaller.child = larger;
+            larger.next = larger;
+            larger.prev = larger;
+        }
+        else
+        {
+            smaller.child.prev.next = larger;
+            smaller.child.prev = larger;
+            smaller.child = larger;
+        }
+        //update the rank of the smaller node
         smaller.rank++;
-        return smaller;
-    }
+        //update the total links
+        this.totalLinks++;
 
-     // return the min node
+        return smaller;
+    }   
+     
+    // return the min node
      public HeapNode findMin()
      {
          return this.min;
@@ -139,9 +178,8 @@ public class Heap
             return;
         }
 
-        //update the size and number of trees
+        //update the size
         this.size--;
-        this.numTrees= this.numTrees -1 + this.min.rank;
         
         //handle the case where the heap has only one node
         if (this.min.next == this.min && this.min.child == null)
@@ -160,19 +198,6 @@ public class Heap
            this.min.next.prev = child.prev;
            originalEnd.next = child;
            child.prev = originalEnd;
-           //find the new min node and set the parents of the root list to null
-           HeapNode current = child;
-           HeapNode newMin = current;
-           do 
-           {
-                current.parent = null;
-                if (current.key < newMin.key)
-                {
-                    newMin = current;
-                }
-                current = current.next;
-            } while (current != child);
-            this.min = newMin;
         }
 
         //handle the case where the min node has no children but is not the only node in the heap
@@ -182,18 +207,9 @@ public class Heap
             HeapNode preMin = this.min.prev;
             preMin.next = this.min.next;
             this.min.next.prev = preMin;
-            //update the min node
-            HeapNode current = preMin;
-            this.min = current;
-            do {
-                if (current.key < this.min.key)
-                {
-                    this.min = current;
-                }
-                current = current.next;
-            } while (current != preMin);
+           
         }
-        successiveLink();
+        successiveLink(); //successive link is updated the min node and the number of trees
     }
 
     /**
