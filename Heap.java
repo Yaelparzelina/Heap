@@ -60,7 +60,7 @@ public class Heap
     private void successiveLink()
     {
         //create an array to store the trees by rank
-        HeapNode[] bucket = new HeapNode[(int)Math.ceil(Math.log(this.size)/Math.log(2))];
+        HeapNode[] bucket = new HeapNode[(int) Math.max(1, Math.ceil(Math.log(this.size)/Math.log(2)))];
         HeapNode x = this.min;
         if (x == null) return;
         //break the circular linked list into a linear linked list
@@ -84,8 +84,7 @@ public class Heap
         HeapNode first = null;
         HeapNode last = null;
         for (int i = 0; i < bucket.length; i++)
-        {
-            
+        {   
             if (bucket[i] != null)
             {
                 HeapNode node = bucket[i];
@@ -136,9 +135,6 @@ public class Heap
             larger = x;
         }
         //link the larger node to the smaller node
-        larger.parent = smaller;
-        larger.next = smaller.child;
-        larger.prev = smaller.child.prev;
         if (smaller.child == null)
         {
             smaller.child = larger;
@@ -147,15 +143,15 @@ public class Heap
         }
         else
         {
+            larger.next = smaller.child;
+            larger.prev = smaller.child.prev;
             smaller.child.prev.next = larger;
             smaller.child.prev = larger;
             smaller.child = larger;
         }
-        //update the rank of the smaller node
+        larger.parent = smaller;
         smaller.rank++;
-        //update the total links
         this.totalLinks++;
-
         return smaller;
     }   
      
@@ -191,8 +187,15 @@ public class Heap
         //handle the case where the min node has children
         else if (this.min.child != null)
         {
-           //concatenate the children of the min node to the root list
            HeapNode child = this.min.child;
+           HeapNode current = child;
+           //set the parents of the children to null
+           do
+           {
+                current.parent = null;
+                current = current.next;
+           } while (current != child);
+           //concatenate the children to the root list
            HeapNode originalEnd = this.min.prev;
            child.prev.next = this.min.next;
            this.min.next.prev = child.prev;
