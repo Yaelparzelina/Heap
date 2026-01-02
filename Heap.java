@@ -67,12 +67,14 @@ public class Heap
      */
    public void concatenateToRootList(HeapNode newNode)
    {
-        HeapNode first = this.min;
-        HeapNode last = this.min.prev;
-        last.next = newNode;
-        newNode.prev = last;
-        first.prev = newNode;
-        newNode.next = first;
+    HeapNode first = this.min;
+    HeapNode last = this.min.prev;
+    HeapNode newStart = newNode;
+    HeapNode newEnd = newNode.prev;
+    last.next = newStart;
+    newStart.prev = last;
+    newEnd.next = first;
+    first.prev = newEnd;
    }
     /**
      * 
@@ -85,7 +87,8 @@ public class Heap
     private void successiveLink()
     {
         //create an array to store the trees by rank
-        HeapNode[] bucket = new HeapNode[(int) Math.max(1, Math.ceil(Math.log(this.size)/Math.log(2)))];
+        int ArraySize = (size==0) ? 1 : (int) Math.ceil(Math.log(this.size)/Math.log(2))+2;
+        HeapNode[] bucket =  new HeapNode[ArraySize];
         HeapNode x = this.min;
         if (x == null) return;
         //break the circular linked list into a linear linked list
@@ -214,7 +217,6 @@ public class Heap
         //handle the case where the min node has children
         else if (this.min.child != null)
         {
-            this.numTrees+=this.min.rank-1; //update the number of trees
            HeapNode child = this.min.child;
            HeapNode current = child;
            //set the parents of the children to null
@@ -224,13 +226,22 @@ public class Heap
                 current = current.next;
            } while (current != child);
            concatenateToRootList(child);
+          
         }
 
         //remove the min node from the root list
         HeapNode preMin = this.min.prev;
         preMin.next = this.min.next;
         this.min.next.prev = preMin;
-           
+        //sets a pointer to the min node (not necessary to right node)
+        if (this.min.next == this.min )
+        {
+            this.min = this.min.child;
+        }
+        else
+        {
+            this.min = this.min.next;
+        }
         successiveLink(); //successive link is updated the min node and the number of trees
     }
     
@@ -244,6 +255,7 @@ public class Heap
     {
         if (node.parent == null) return;
         //handle the case where the node has a parent and the parent has a rank greater than 1
+        this.totalCuts++;
         HeapNode parent = node.parent;
         if (node.parent.rank>1)
         {
@@ -263,15 +275,21 @@ public class Heap
         }
         parent.rank--;
         node.marked = false;
+        this.numMarkedNodes--;
         node.prev = node;
         node.next = node;
-        numTrees++;
+        this.numTrees++;
         concatenateToRootList(node);
         if (parent.marked)
         {
             cascadingCuts(parent);
         }
-        else parent.marked = true;
+        else if (parent.parent != null)
+            {
+                parent.marked = true;
+                this.numMarkedNodes++;
+            }
+        
 
     }
     /**
