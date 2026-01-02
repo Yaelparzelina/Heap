@@ -340,7 +340,7 @@ public class Heap
             parent.parent = node;
             
             //set the node as the parent of his siblings
-            HeapNode current = parent.child;
+            HeapNode current = parentChild;
             node.child = parentChild;
             do { 
                 current.parent = node;
