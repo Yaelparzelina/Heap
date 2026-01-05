@@ -10,7 +10,7 @@ public class Heap
 {
     public final boolean lazyMelds;
     public final boolean lazyDecreaseKeys;
-    public HeapNode min;
+    public HeapItem min;
     public HeapNode startRoot;
     public int size;
     public int numTrees;
@@ -47,16 +47,16 @@ public class Heap
      * for non-lazy meld and lazy decrease keys complexity O(n)
      * for non-lazy meld and non-lazy decrease keys complexity O(log n)
      */
-    public HeapNode insert(int key, String info) 
+    public HeapItem insert(int key, String info) 
     { 
         // create a new heap with the same lazy melds and lazy decrease keys and insert the new node into it   
         HeapNode newNode = new HeapNode(key, info);
         Heap newHeap = new Heap(this.lazyMelds, this.lazyDecreaseKeys);
-        newHeap.min = newNode;
+        newHeap.min = newNode.item;
         newHeap.size = 1;
         newHeap.numTrees = 1;
         meld(newHeap);
-        return newNode;
+        return newNode.item;
     }
     /**
      * 
@@ -65,7 +65,7 @@ public class Heap
      * complexity O(1)
      *
      */
-   public void concatenateToRootList(HeapNode newNode)
+   public void concatenateToRootList(HeapItem newNode)
    {
     if (newNode == null) return;
     if (this.min == null)
@@ -73,10 +73,10 @@ public class Heap
         this.min = newNode;
         return;
     }
-    HeapNode first = this.min;
-    HeapNode last = this.min.prev;
-    HeapNode newStart = newNode;
-    HeapNode newEnd = newNode.prev;
+    HeapNode first = this.min.node;
+    HeapNode last = this.min.node.prev;
+    HeapNode newStart = newNode.node;
+    HeapNode newEnd = newNode.node.prev;
     last.next = newStart;
     newStart.prev = last;
     newEnd.next = first;
@@ -93,9 +93,9 @@ public class Heap
     private void successiveLink()
     {
         //create an array to store the trees by rank
-        int ArraySize = (size==0) ? 1 : (int) Math.ceil(Math.log(this.size)/Math.log(2))+2;
+        int ArraySize = (size==0) ? 1 : (int) (1.5* Math.ceil(Math.log(this.size)/Math.log(2))+2);
         HeapNode[] bucket =  new HeapNode[ArraySize];
-        HeapNode x = this.min;
+        HeapNode x = this.min.node;
         if (x == null) return;
         //break the circular linked list into a linear linked list
         x.prev.next=null;
@@ -129,7 +129,7 @@ public class Heap
                     last = node;
                     node.next = node;
                     node.prev = node;
-                    this.min = node;
+                    this.min = node.item;
                 }
                 else
                 {
@@ -140,9 +140,9 @@ public class Heap
                     first.prev = node;
                     last = node;
                     //update the min node
-                    if (node.key < this.min.key)
+                    if (node.item.key < this.min.key)
                     {
-                        this.min = node;
+                        this.min = node.item;
                     }
                 }
             }
@@ -158,7 +158,7 @@ public class Heap
     {
         HeapNode smaller;
         HeapNode larger;
-        if (x.key < y.key)
+        if (x.item.key < y.item.key)
         {
             smaller = x;
             larger = y;
@@ -190,7 +190,7 @@ public class Heap
     }   
      
     // return the min node
-     public HeapNode findMin()
+     public HeapItem findMin()
      {
          return this.min;
      }
@@ -214,16 +214,16 @@ public class Heap
         this.size--;
         
         //handle the case where the heap has only one node
-        if (this.min.next == this.min && this.min.child == null)
+        if (this.min.node.next == this.min.node && this.min.node.child == null)
         {
             this.min = null;
             return;
         }
 
         //handle the case where the min node has children
-        else if (this.min.child != null)
+        else if (this.min.node.child != null)
         {
-           HeapNode child = this.min.child;
+           HeapNode child = this.min.node.child;
            HeapNode current = child;
            //set the parents of the children to null
            do
@@ -231,15 +231,15 @@ public class Heap
                 current.parent = null;
                 current = current.next;
            } while (current != child);
-           concatenateToRootList(child);
+           concatenateToRootList(child.item);
           
         }
 
         //remove the min node from the root list
-        HeapNode preMin = this.min.prev;
-        preMin.next = this.min.next;
-        this.min.next.prev = preMin;
-        this.min = preMin; 
+        HeapNode preMin = this.min.node.prev;
+        preMin.next = this.min.node.next;
+        this.min.node.next.prev = preMin;
+        this.min = preMin.item;  //set a temporary min node to the previous min node to have a reference to the root list
         successiveLink(); //successive link is updated the min node and the number of trees
     }
     
@@ -280,7 +280,7 @@ public class Heap
         this.numTrees++;
         node.prev = node;
         node.next = node;
-        concatenateToRootList(node); //concatenate the node to the root list
+        concatenateToRootList(node.item); //concatenate the node to the root list
         
         if (parent.marked) cascadingCuts(parent);
         else if (parent.parent != null) {
@@ -289,92 +289,49 @@ public class Heap
         }
     }
     
+    /**
+     * 
+     * Heapify up the node to fix the heap.
+     * complexity O(log n)
+     *
+     */
     public void heapifyUp(HeapNode node)
     {
-        while (node.parent != null && node.key < node.parent.key)
+        while (node.parent != null && node.item.key < node.parent.item.key)
         {
             this.totalHeapifyCosts++;
-
             HeapNode parent = node.parent;
-            HeapNode preNode = node.prev;
-            HeapNode postNode = node.next;
-            HeapNode preParent = parent.prev;
-            HeapNode postParent = parent.next;
-            HeapNode nodeChild = node.child;
-            HeapNode parentChild = parent.child;
-
+            //swap the items
+            HeapItem tempItem = parent.item;
+            parent.item = node.item;
+            node.item = tempItem;
+            // update the nodes within the items
+            parent.item.node = parent;
+            node.item.node = node;
             
-            //update the ranks and the marked status
-            int tempRank = node.rank;
-            node.rank = parent.rank;
-            parent.rank = tempRank;
-            boolean tempMarked = parent.marked;
-            parent.marked = node.marked;
-            node.marked = tempMarked;
-            
-            //handle parent and grandparent relations
-            if (parent.parent != null && parent.parent.child == parent)
-            {
-                parent.parent.child = node;
-                
-            }
-            else if (parent.parent == null && this.min == parent)
-            {
-                this.min = node;
-            }
-
-       
-
-            //add node to parent's siblings
-            preParent.next = node;
-            postParent.prev = node;
-            node.next = postParent;
-            node.prev = preParent;
-            node.parent = parent.parent;
-
-            //add parent to node's siblings
-            preNode.next = parent;
-            parent.prev = preNode;
-            parent.next = postNode;
-            postNode.prev = parent;
-            parent.parent = node;
-            
-            //set the node as the parent of his siblings
-            HeapNode current = parentChild;
-            node.child = parentChild;
-            do { 
-                current.parent = node;
-                current = current.next;
-            } while (current != parentChild);
-
-          
-            //set the parents of the node's children to the parent
-            current = nodeChild;
-            if (nodeChild != null)
-            {
-                do { 
-                current.parent = parent;
-                current = current.next;
-                } while (current != nodeChild);
-                parent.child = nodeChild;
-            }
-            //for the next iteration
-            node = parent;
         }
-
     }
-
-
+    
     /**
      * 
      * pre: 0<=diff<=x.key
-     * 
+     * complexity O(n) for lazy decrease keys
+     * complexity O(log n) for non-lazy decrease keys
      * Decrease the key of x by diff and fix the heap.
      * 
+     *
      */
-    public void decreaseKey(HeapNode x, int diff) 
+    public void decreaseKey(HeapItem x, int diff) 
     {    
         x.key -= diff;
+        if (this.lazyDecreaseKeys)
+        {
+            cascadingCuts(x.node);
+        }
+        else
+        {
+            heapifyUp(x.node);
+        }
     }
 
     /**
@@ -382,9 +339,10 @@ public class Heap
      * Delete the x from the heap.
      *
      */
-    public void delete(HeapNode x) 
+    public void delete(HeapItem x) 
     {    
-        return; // should be replaced by student code
+        this.decreaseKey(x,x.key+1);
+        this.deleteMin();
     }
 
 
@@ -505,27 +463,38 @@ public class Heap
      */
     public static class HeapNode
     {
-        public int key;
-        public String info;
+        public HeapItem item;
         public HeapNode child;
         public HeapNode next;
         public HeapNode prev;
         public HeapNode parent;
         public int rank;
         public boolean marked; //whether the node's child has been cut 
-        public boolean deleted; //whether the node's been deleted
         
         public HeapNode(int key, String info)
         {
-            this.key = key;
-            this.info = info;
+            this.item = new HeapItem(this,key, info); //create a new heap item with the node and the key and info
             this.child = null;
             this.next = this;
             this.prev = this;
             this.parent = null;
             this.rank = 0;
             this.marked = false;
-            this.deleted = false;
+        }
+    }
+    /**
+     * Class implementing an item in a Heap.
+     *  
+     */
+    public static class HeapItem{
+        public HeapNode node;
+        public int key;
+        public String info;
+        public HeapItem(HeapNode node,int key, String info)
+        {
+            this.node = node;
+            this.key = key;
+            this.info = info;
         }
     }   
 }
