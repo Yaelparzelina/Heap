@@ -47,6 +47,7 @@ public class StudentTest {
         heap.insert(10, "A");
         heap.insert(5, "B");
         heap.insert(20, "C");
+        // findMin returns HeapItem now, which contains the key
         return heap.findMin() != null && heap.findMin().key == 5;
     }
 
@@ -63,17 +64,28 @@ public class StudentTest {
         Heap heap = new Heap(true, true);
         heap.insert(30, "X");
         heap.insert(40, "Y");
-        Heap.HeapNode n3 = heap.insert(50, "Z");
-        heap.decreaseKey(n3, 25); // new key = 25
+        
+        // Changed from Heap.HeapNode to HeapItem
+        HeapItem item3 = heap.insert(50, "Z");
+        
+        // decreaseKey now receives HeapItem
+        heap.decreaseKey(item3, 25); // new key = 25
+        
         return heap.findMin() != null && heap.findMin().key == 25;
     }
 
     private static boolean testDeleteNode() {
         Heap heap = new Heap(true, true);
         heap.insert(15, "P");
-        Heap.HeapNode n2 = heap.insert(7, "Q");
+        
+        // Changed from Heap.HeapNode to HeapItem
+        HeapItem item2 = heap.insert(7, "Q");
+        
         heap.insert(25, "R");
-        heap.delete(n2);
+        
+        // delete now receives HeapItem
+        heap.delete(item2);
+        
         return heap.findMin() != null && heap.findMin().key == 15;
     }
 }
