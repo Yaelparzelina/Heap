@@ -11,7 +11,6 @@ public class Heap
     public final boolean lazyMelds;
     public final boolean lazyDecreaseKeys;
     public HeapItem min;
-    public HeapNode startRoot;
     public int size;
     public int numTrees;
     public int numMarkedNodes;
@@ -38,26 +37,7 @@ public class Heap
         this.totalHeapifyCosts = 0;
     }
 
-    /**
-     * 
-     * pre: key > 0
-     *
-     * Insert (key,info) into the heap and return the newly generated HeapNode.
-     * for lazy meld complexity O(1)
-     * for non-lazy meld and lazy decrease keys complexity O(n)
-     * for non-lazy meld and non-lazy decrease keys complexity O(log n)
-     */
-    public HeapItem insert(int key, String info) 
-    { 
-        // create a new heap with the same lazy melds and lazy decrease keys and insert the new node into it   
-        HeapNode newNode = new HeapNode(key, info);
-        Heap newHeap = new Heap(this.lazyMelds, this.lazyDecreaseKeys);
-        newHeap.min = newNode.item;
-        newHeap.size = 1;
-        newHeap.numTrees = 1;
-        meld(newHeap);
-        return newNode.item;
-    }
+   
     /**
      * 
      * pre: not in root list. 
@@ -148,6 +128,7 @@ public class Heap
             }
         }
     }
+
     /**
      * 
      * Link two trees of the same rank x and y.
@@ -187,9 +168,37 @@ public class Heap
         smaller.rank++;
         this.totalLinks++;
         return smaller;
-    }   
+    } 
+    
+     /**
+     * 
+     * pre: key > 0
+     *
+     * Insert (key,info) into the heap and return the newly generated HeapNode.
+     * for lazy meld complexity O(1)
+     * for non-lazy meld and lazy decrease keys complexity O(n)
+     * for non-lazy meld and non-lazy decrease keys complexity O(log n)
+     */
+     public HeapItem insert(int key, String info) 
+     { 
+         // create a new heap with the same lazy melds and lazy decrease keys and insert the new node into it   
+         HeapNode newNode = new HeapNode(key, info);
+         Heap newHeap = new Heap(this.lazyMelds, this.lazyDecreaseKeys);
+         newHeap.min = newNode.item;
+         newHeap.size = 1;
+         newHeap.numTrees = 1;
+         meld(newHeap);
+         return newNode.item;
+     }
      
-    // return the min node
+    
+     /**
+      * 
+      * return the min node
+      * complexity O(1)
+      *
+      */
+
      public HeapItem findMin()
      {
          return this.min;
@@ -348,6 +357,8 @@ public class Heap
     /**
      * 
      * Delete the x from the heap.
+     * complexity O(n) for lazy decrease keys
+     * complexity O(log n) for non-lazy decrease keys
      *
      */
     public void delete(HeapItem x) 
@@ -361,6 +372,9 @@ public class Heap
      * 
      * Meld the heap with heap2
      * pre: heap2.lazyMelds = this.lazyMelds AND heap2.lazyDecreaseKeys = this.lazyDecreaseKeys
+     * complexity O(1) for lazy melds
+     * complexity O(n) for non-lazy melds and lazy decrease keys
+     * complexity O(log n) for non-lazy melds and non-lazy decrease keys
      *
      */
     public void meld(Heap heap2)   

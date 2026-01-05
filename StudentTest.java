@@ -66,7 +66,7 @@ public class StudentTest {
         heap.insert(40, "Y");
         
         // Changed from Heap.HeapNode to HeapItem
-        HeapItem item3 = heap.insert(50, "Z");
+        Heap.HeapItem item3 = heap.insert(50, "Z");
         
         // decreaseKey now receives HeapItem
         heap.decreaseKey(item3, 25); // new key = 25
@@ -79,7 +79,7 @@ public class StudentTest {
         heap.insert(15, "P");
         
         // Changed from Heap.HeapNode to HeapItem
-        HeapItem item2 = heap.insert(7, "Q");
+        Heap.HeapItem item2 = heap.insert(7, "Q");
         
         heap.insert(25, "R");
         
