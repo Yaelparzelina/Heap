@@ -217,6 +217,8 @@ public class Heap
         if (this.min.node.next == this.min.node && this.min.node.child == null)
         {
             this.min = null;
+            this.numTrees = 0;
+            this.numMarkedNodes = 0;
             return;
         }
 
@@ -225,10 +227,15 @@ public class Heap
         {
            HeapNode child = this.min.node.child;
            HeapNode current = child;
-           //set the parents of the children to null
+           //set the new roots to have no parent and not be marked
            do
            {
                 current.parent = null;
+                if (current.marked)
+                {
+                    current.marked = false;
+                    this.numMarkedNodes--;
+                }
                 current = current.next;
            } while (current != child);
            concatenateToRootList(child.item);
@@ -274,8 +281,11 @@ public class Heap
 
         //update the rank of the parent and the node
         parent.rank--;
-        node.marked = false;
-        this.numMarkedNodes--;
+        if (node.marked)
+        {
+            node.marked = false;
+            this.numMarkedNodes--;
+        }
         node.parent = null;
         this.numTrees++;
         node.prev = node;
@@ -308,6 +318,7 @@ public class Heap
             // update the nodes within the items
             parent.item.node = parent;
             node.item.node = node;
+            node = parent;
             
         }
     }
@@ -323,15 +334,15 @@ public class Heap
      */
     public void decreaseKey(HeapItem x, int diff) 
     {    
+        if (x == null || diff < 0 || x.node == null) return;
         x.key -= diff;
-        if (this.lazyDecreaseKeys)
+        if (x.node.parent != null && x.key < x.node.parent.item.key)
         {
-            cascadingCuts(x.node);
+            if (this.lazyDecreaseKeys) cascadingCuts(x.node);
+            else heapifyUp(x.node);
         }
-        else
-        {
-            heapifyUp(x.node);
-        }
+        if (this.min.key > x.key) this.min = x;
+    
     }
 
     /**
