@@ -1,0 +1,9 @@
+#id1: 213635204
+#name1: Yael Caspi
+#name1_hebrew: יעל כספי
+#username1: yaelcaspi2
+
+#id2:324207885
+#name2:Yael Parzelina
+‎‫#‬name2_hebrew יעל פרצלינה
+#username2: parzelina

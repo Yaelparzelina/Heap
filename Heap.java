@@ -1,3 +1,10 @@
+/* username1: yaelcaspi2
+ * id1: 213635204
+ * username2: parzelina
+ * id2: 324207885
+ */
+
+
 /**
  * Heap
  *
@@ -66,8 +73,8 @@ public class Heap
      * 
      * 
      * link trees with the same rank to reconstruct the heap.
-     * for lazy decrease keys complexity O(n)
-     * for non-lazy decrease keys complexity O(log n)
+     * for lazy melds complexity O(n) because we can have at most n trees in the heap.
+     * for non-lazy melds complexity O(log n) because we can have at most log n trees in the heap.
      * 
      */
     private void successiveLink()
@@ -176,8 +183,7 @@ public class Heap
      *
      * Insert (key,info) into the heap and return the newly generated HeapNode.
      * for lazy meld complexity O(1)
-     * for non-lazy meld and lazy decrease keys complexity O(n)
-     * for non-lazy meld and non-lazy decrease keys complexity O(log n)
+     * for non-lazy meld complexity O(log n)
      */
      public HeapItem insert(int key, String info) 
      { 
@@ -207,8 +213,8 @@ public class Heap
     /**
      * 
      * Delete the minimal item.
-     * for lazy decrease keys complexity O(n)
-     * for non-lazy decrease keys complexity O(log n)
+     * for lazy melds complexity O(n) because the number of trees can be at most n.
+     * for non-lazy melds complexity O(log n) because the number of trees can be at most log n.
      *
      */
     public void deleteMin()
@@ -262,7 +268,9 @@ public class Heap
     /**
      * 
      * cascading cuts to fix the heap by cutting the node and its parent if the node is marked.
-     * complexity O(n)
+     * called only with lazy decrease keys where height of the tree is at most n.
+     * with lazy melds complexity O(n) because the height of the tree is at most n.
+     * with non-lazy melds complexity O(n*log n) because the height of the tree is at most n and the cost of melding is log n.
      *
      */
     public void cascadingCuts(HeapNode node)
@@ -295,11 +303,15 @@ public class Heap
             node.marked = false;
             this.numMarkedNodes--;
         }
+        
         node.parent = null;
         this.numTrees++;
         node.prev = node;
         node.next = node;
-        concatenateToRootList(node.item); //concatenate the node to the root list
+       Heap newHeap = new Heap(this.lazyMelds, this.lazyDecreaseKeys);
+       newHeap.min = node.item;
+       newHeap.numTrees = 1;
+       meld(newHeap);
         
         if (parent.marked) cascadingCuts(parent);
         else if (parent.parent != null) {
@@ -311,6 +323,7 @@ public class Heap
     /**
      * 
      * Heapify up the node to fix the heap.
+     * called only with non-lazy decrease keys where height of the tree is at most log n.
      * complexity O(log n)
      *
      */
@@ -335,9 +348,9 @@ public class Heap
     /**
      * 
      * pre: 0<=diff<=x.key
-     * complexity O(n) for lazy decrease keys
-     * complexity O(log n) for non-lazy decrease keys
      * Decrease the key of x by diff and fix the heap.
+     * with lazy decrease keys calls for cascading cuts which has complexity O(n) or O(nlog n) depending on lazy meld.
+     * with non-lazy decrease keys calls for heapify up which has complexity O(log n).
      * 
      *
      */
@@ -357,9 +370,9 @@ public class Heap
     /**
      * 
      * Delete the x from the heap.
-     * complexity O(n) for lazy decrease keys
-     * complexity O(log n) for non-lazy decrease keys
-     *
+     * with lazy decrease keys calls for cascading cuts which has complexity O(n) or O(nlog n) depending on lazy meld.
+     * with non-lazy decrease keys calls for heapify up which has complexity O(log n).
+     * 
      */
     public void delete(HeapItem x) 
     {    
@@ -373,8 +386,8 @@ public class Heap
      * Meld the heap with heap2
      * pre: heap2.lazyMelds = this.lazyMelds AND heap2.lazyDecreaseKeys = this.lazyDecreaseKeys
      * complexity O(1) for lazy melds
-     * complexity O(n) for non-lazy melds and lazy decrease keys
-     * complexity O(log n) for non-lazy melds and non-lazy decrease keys
+     * complexity O(log n) for non-lazy melds 
+     * 
      *
      */
     public void meld(Heap heap2)   
